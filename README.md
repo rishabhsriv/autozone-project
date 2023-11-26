@@ -30,9 +30,9 @@ Pre Requisites :
 Installation Steps 
 ```sh
    helm repo add istio https://istio-release.storage.googleapis.com/charts
-   helm install istio-base --namespace istio-system istio/base --version 1.18
-   helm install istiod --namespace istio-system istio/istiod --version 1.18
-   helm install istio-ingressgateway --namespace istio-system istio/gateway --version 1.18 -f aks-values.yaml
+   helm install istio-base --namespace istio-system istio/base --version 1.20
+   helm install istiod --namespace istio-system istio/istiod --version 1.20
+   helm install istio-ingressgateway --namespace istio-system istio/gateway --version 1.20 -f aks-values.yaml
 ```
 
 
