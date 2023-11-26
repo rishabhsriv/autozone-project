@@ -8,29 +8,38 @@ provider "helm" {
   }
 }
 
-
 resource "kubernetes_namespace" "istio_ns" {
   metadata {
     name = "istio-system"
   }
 }
 
-# Later on we should create a module for istio
-# Need to check how we can use the istio version here
+resource "null_resource" "provision_istio" {
+  provisioner "local-exec" {
+    command = "sh ../../../../modules/service-mesh/istio/setup.sh"
+  }
+}
+
 # Installing istio base
 resource "helm_release" "istio-base" {
   name      = "istio-base"
-  chart     = "./istio-config/istio/manifests/charts/base"
+  chart     = "./istio-1.20.0/manifests/charts/base"
   namespace = "istio-system"
+
+  depends_on = [
+    null_resource.provision_istio
+  ]
+
 }
 
 # Installing istiod
 resource "helm_release" "istiod" {
   name      = "istiod"
-  chart     = "./istio-config/istio/manifests/charts/istio-control/istio-discovery"
+  chart     = "./istio-1.20.0/manifests/charts/istio-control/istio-discovery"
   namespace = "istio-system"
 
   depends_on = [
+    null_resource.provision_istio,
     helm_release.istio-base
   ]
 
@@ -39,12 +48,12 @@ resource "helm_release" "istiod" {
 # Installing istio-ingress
 resource "helm_release" "istio-ingress" {
   name      = "istio-ingress"
-  chart     = "./istio-config/istio/manifests/charts/gateways/istio-ingress"
+  chart     = "./istio-1.20.0/manifests/charts/gateways/istio-ingress"
   namespace = "istio-system"
 
   depends_on = [
+    null_resource.provision_istio,
     helm_release.istio-base,
     helm_release.istiod
   ]
-
 }
