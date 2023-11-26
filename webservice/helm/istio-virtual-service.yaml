@@ -21,7 +21,7 @@ spec:
 #      uri: /
     route:
     - destination:
-        host: my-app-webservice.dev.svc.cluster.local
+        host: my-app-webservice.autozone-dev.svc.cluster.local
         port:
           number: {{ .Values.service.httpPort }}
     timeout: {{ .Values.istio.virtualService.maxTimeout }}
