@@ -1,0 +1,93 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+env: test
+
+docker:
+  # Releases are published to docker hub under mentioned 'user' project.
+  # Daily builds from prow are on gcr.io
+  registry: hub.docker.com
+  # User for the docker hub
+  user: rishabhsriv13
+  # Password for the docker hub, read from secret
+  # Have kept password as blank kept the charts in such a way to use private registry username & password
+  # Better pull the image & push it to a private repository then update creds here since these values will be stored as secrets
+  password: ""
+  # Image name
+  image: reddit-clone
+  # Default tag for Symptom Triage images.
+  # For the friday release we are using the provided docker image tag
+  tag: latest
+  # Default image pull policy.
+  pullPolicy: Always
+  # worker node on which image will be deployed
+  # nodeName: azdejbapp01
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  httpPort: 80
+  targetPort: 3000
+
+istio:
+  enabled: false
+  injectSidecar: true
+  istioIngressGateway: ingressgateway
+  gateway:
+    servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+  virtualService:
+    maxTimeout: 60s
+    hosts:
+      - "*"
+    uriPrefix: /test
+
+prometheus:
+  enabled: false
+  port: 8081
+  path: "/metrics"
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 1Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+deploymentStrategy:
+  replicaCount: 1
+#  startegy: Recreate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  terminationGracePeriodSeconds: 20
+  autoScaler:
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 50
+
+app:
+  envVars:
+    LOG_LEVEL: info
+    HTTP_PORT: 3000
+    TMPFS_LOCATION: /tmp/app-server
+    MAX_WORKER: 10
+httpPort: 3000

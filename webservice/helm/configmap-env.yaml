@@ -1,0 +1,14 @@
+{{ if .Values.app.envVars }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "service.configmap.env.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "webservice.labels" . | indent 4 }}
+data:
+{{- range $key, $val := .Values.app.envVars }}
+  {{ $key }}: {{ $val | quote }}
+{{ end }}
+---
+{{ end }}

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "webservice.fullname" . }}
+  labels:
+{{ include "webservice.labels" . | indent 4 }}
+
+{{ if eq .Values.service.type "NodePort" }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.httpPort }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+      nodePort: {{ .Values.service.nodePort }}
+{{ else }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.httpPort }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+{{ end }}
+  selector:
+    app.kubernetes.io/name: {{ include "webservice.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

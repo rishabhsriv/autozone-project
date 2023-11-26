@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "webservice.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "webservice.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.deploymentStrategy.replicaCount }}
+  strategy:
+    type: {{ .Values.deploymentStrategy.rollingUpdate.startegy }}
+    rollingUpdate:
+      maxSurge: {{ .Values.deploymentStrategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.deploymentStrategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "webservice.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "webservice.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/configmap-env: {{ include (print $.Template.BasePath "/configmap-env.yaml") . | sha256sum }}
+        checksum/configmap-configfiles: {{ include (print $.Template.BasePath "/configmap-configfiles.yaml") . | sha256sum }}
+        rollme: {{ randAlphaNum 5 | quote }}
+        prometheus.io/scrape: "{{ .Values.prometheus.enabled }}"
+        prometheus.io/port: "{{ .Values.prometheus.port }}"
+        prometheus.io/path: "{{ .Values.prometheus.path }}"
+    spec:
+      imagePullSecrets:
+        - name: {{ include "service.registry.name" . }}
+      terminationGracePeriodSeconds: {{ .Values.deploymentStrategy.terminationGracePeriodSeconds }}
+      nodeName: {{ .Values.docker.nodeName }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ include "service.image.name" . }}"
+          imagePullPolicy: {{ .Values.docker.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "service.configmap.env.fullname" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.httpPort }}
+              protocol: TCP
+            - name: http-prometheus
+              containerPort: {{ .Values.prometheus.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: service-tmpfs
+              mountPath: {{ .Values.app.envVars.TMPFS_LOCATION }}
+            - name: config-volume
+              mountPath: {{ .Values.app.configFilesMountPath }}
+      volumes:
+        - name: config-volume
+          configMap:
+              name: {{ include "service.configmap.config.fullname" . }}
+        - name: service-tmpfs
+          emptyDir:
+            medium: Memory
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -1,0 +1,14 @@
+{{ if .Values.app.configFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "service.configmap.config.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "webservice.labels" . | indent 4 }}
+data:
+{{- range $config := .Values.app.configFiles }}
+  {{ $config.fileName }}: {{ $config.data | toYaml | indent 4 }}
+{{- end }}
+{{ end }}
+---
