@@ -21,7 +21,7 @@ docker:
   # Default image pull policy.
   pullPolicy: Always
   # worker node on which image will be deployed
-  # nodeName: azdejbapp01
+
 
 nameOverride: ""
 fullnameOverride: ""
