@@ -1,4 +1,4 @@
-# Reddit Clone App on Kubernetes with Istio ingressgateway
+# Test App on Kubernetes with Istio service mesh 
 This project demonstrates how to deploy a Reddit clone app on Kubernetes with istio ingress gateway on a k8s cluster.
 
 
